@@ -1,11 +1,11 @@
 mod utils_debug;
 mod utils_input;
 mod utils_program;
-use miden_vm::{ExecutionProof, ProvingOptions, DefaultHost, MemAdviceProvider};
 use miden_air::ExecutionOptions;
+use miden_vm::{DefaultHost, ExecutionProof, MemAdviceProvider, ProvingOptions};
 use serde::{Deserialize, Serialize};
+use std::{fs::File, io::Write};
 use wasm_bindgen::prelude::*;
-
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Deserialize, Serialize)]
 pub struct Outputs {
@@ -18,7 +18,7 @@ pub struct Outputs {
 }
 
 /// Runs the Miden VM with the given inputs
-#[wasm_bindgen]
+
 pub fn run_program(code_frontend: &str, inputs_frontend: &str) -> Result<Outputs, JsValue> {
     let mut program = utils_program::MidenProgram::new(code_frontend, utils_program::DEBUG_OFF);
     program
@@ -32,8 +32,8 @@ pub fn run_program(code_frontend: &str, inputs_frontend: &str) -> Result<Outputs
 
     let host = DefaultHost::new(MemAdviceProvider::from(inputs.advice_provider));
 
-    let execution_options = ExecutionOptions::new(None, 64 as u32)
-        .map_err(|err| format!("{err}"))?;
+    let execution_options =
+        ExecutionOptions::new(None, 64 as u32).map_err(|err| format!("{err}"))?;
 
     let trace = miden_vm::execute(
         &program.program.unwrap(),
@@ -56,7 +56,7 @@ pub fn run_program(code_frontend: &str, inputs_frontend: &str) -> Result<Outputs
 }
 
 /// Proves the program with the given inputs
-#[wasm_bindgen]
+
 pub fn prove_program(code_frontend: &str, inputs_frontend: &str) -> Result<Outputs, JsValue> {
     let mut program = utils_program::MidenProgram::new(code_frontend, utils_program::DEBUG_OFF);
     program
@@ -83,7 +83,12 @@ pub fn prove_program(code_frontend: &str, inputs_frontend: &str) -> Result<Outpu
     .map_err(|err| format!("Failed to prove execution - {:?}", err))?;
 
     let result = Outputs {
-        program_hash: program.program_info.clone().unwrap().program_hash().to_string(),
+        program_hash: program
+            .program_info
+            .clone()
+            .unwrap()
+            .program_hash()
+            .to_string(),
         stack_output: output.stack().to_vec(),
         cycles: None,
         trace_len: Some(proof.stark_proof().trace_length()),
@@ -103,7 +108,7 @@ pub fn prove_program(code_frontend: &str, inputs_frontend: &str) -> Result<Outpu
 }
 
 /// Verifies the proof with the given inputs
-#[wasm_bindgen]
+
 pub fn verify_program(
     code_frontend: &str,
     inputs_frontend: &str,
@@ -368,6 +373,8 @@ fn test_verify_program() {
     }"#;
 
     let prove_result = prove_program(asm, input_str).unwrap();
+    let mut file = File::create("proof.json").unwrap();
+    let _ = file.write(&prove_result.proof.clone().unwrap());
 
     let result = verify_program(asm, input_str, output_str, prove_result.proof.unwrap()).unwrap();
 
