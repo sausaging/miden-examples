@@ -5,8 +5,8 @@ use miden_air::ExecutionOptions;
 use miden_vm::{DefaultHost, ExecutionProof, MemAdviceProvider, ProvingOptions};
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::Write};
-use wasm_bindgen::prelude::*;
-#[wasm_bindgen(getter_with_clone)]
+
+
 #[derive(Deserialize, Serialize)]
 pub struct Outputs {
     pub program_hash: String,
